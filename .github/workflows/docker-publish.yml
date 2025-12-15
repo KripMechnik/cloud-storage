@@ -31,10 +31,25 @@ jobs:
             type=ref,event=branch
             type=sha,prefix={{branch}}-
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+      - name: Build docker image
+        run: |
+          docker build ./app/access --file ./app/access/Dockerfile --tag cr.yandex/${{secrets.YC_REGISTRY_ID }}/access:latest
+
+      - name: Login to YC Registry
+        uses: docker/login-action@v3.0.0
         with:
-          context: ./app/access
-          push: true
-          file: ./app/access/Dockerfile
-          tags: ${{ steps.meta.outputs.tags }}
+          registry: cr.yandex
+          username: json_key
+          password: ${{ secrets.YC_KEYS }}
+
+      - name: Push tag to YC Registry
+        run: |
+          docker push cr.yandex/${{ secrets.YC_REGISTRY_ID }}/access:latest
+
+#      - name: Build and push Docker image
+#        uses: docker/build-push-action@v5
+#        with:
+#          context: ./app/access
+#          push: true
+#          file: ./app/access/Dockerfile
+#          tags: ${{ steps.meta.outputs.tags }}
