@@ -4,7 +4,7 @@ from app.auth.auth import LoginRequest, LoginResponse, BaseResponse
 from app.auth.auth import RegisterRequest, RegisterResponse
 from app.auth.auth_service import AuthService
 
-auth_router = APIRouter(prefix="/docker-compose ps", tags=["Authentication"])
+auth_router = APIRouter(tags=["Authentication"])
 
 
 @auth_router.get("/", response_model=BaseResponse)

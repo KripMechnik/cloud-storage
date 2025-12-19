@@ -23,6 +23,8 @@ services:
       - PORT=3001
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cloudstorage
       - JWT_SECRET=your_strong_secret_123
+      - SERVICE_NAME=auth-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
     depends_on:
       - db
     networks:
@@ -36,6 +38,8 @@ services:
       - PORT=3002
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cloudstorage
       - JWT_SECRET=your_strong_secret_123
+      - SERVICE_NAME=profile-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
     depends_on:
       - db
     networks:
@@ -47,6 +51,8 @@ services:
       - "8001:8001"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cloudstorage
+      - SERVICE_NAME=audit-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
     depends_on:
       - db
     networks:
@@ -58,6 +64,8 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cloudstorage
+      - SERVICE_NAME=access-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
     depends_on:
       - db
     networks:
@@ -69,6 +77,8 @@ services:
       - "8003:8003"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cloudstorage
+      - SERVICE_NAME=config-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
     depends_on:
       - db
     networks:
@@ -80,6 +90,8 @@ services:
       - "8004:8004"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cloudstorage
+      - SERVICE_NAME=file-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
     depends_on:
       - db
     networks:
@@ -91,6 +103,8 @@ services:
       - "8005:8005"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cloudstorage
+      - SERVICE_NAME=notification-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
     depends_on:
       - db
     networks:
@@ -102,10 +116,49 @@ services:
       - "8007:8007"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cloudstorage
+      - SERVICE_NAME=subscription-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
     depends_on:
       - db
+      - otel-collector
     networks:
       - cloudstorage-net
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.103.1
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ../otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - cloudstorage-net
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    ports:
+      - "16686:16686"
+    networks:
+      - cloudstorage-net
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ../prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - cloudstorage-net
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    ports:
+      - "3000:3000"
+    networks:
+      - cloudstorage-net
+    depends_on:
+      - db
 
 volumes:
   pgdata:
