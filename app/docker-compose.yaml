@@ -160,6 +160,26 @@ services:
     depends_on:
       - db
 
+  loki:
+    image: grafana/loki:3.1.1
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ../loki-config.yaml:/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    networks:
+      - cloudstorage-net
+
+  promtail:
+    image: grafana/promtail:3.1.1
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../promtail-config.yaml:/etc/promtail/promtail-config.yaml
+    networks:
+      - cloudstorage-net
+
 volumes:
   pgdata:
 
